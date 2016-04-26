@@ -3,7 +3,7 @@
 
 #include <uapi/linux/kdev_t.h>
 
-#define MINORBITS	20
+#define MINORBITS	20  //32位中低20位为次设备号
 #define MINORMASK	((1U << MINORBITS) - 1)
 
 #define MAJOR(dev)	((unsigned int) ((dev) >> MINORBITS))

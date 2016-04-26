@@ -449,7 +449,7 @@ struct request_queue;
 
 struct block_device {//每个设备分区对应一个block_device结构
 	dev_t			bd_dev;  /* not a kdev_t - it's a search key 设备号 */
-	int			bd_openers;  //有多少个进程打开了该设备
+	int			bd_openers;               //有多少个进程打开了该设备
 	struct inode *		bd_inode;	/* will die 指向该设备的inode*/
 	struct super_block *	bd_super;
 	struct mutex		bd_mutex;	/* open/close mutex */
@@ -463,12 +463,12 @@ struct block_device {//每个设备分区对应一个block_device结构
 #endif
 	struct block_device *	bd_contains; //如果该block_device描述的是一个分区，则该变量指向描述主块设备的block_device 否则指向自己
 	unsigned		bd_block_size;
-	struct hd_struct *	bd_part; //如果该结构表示一个分区，则指向该分区的信息
+	struct hd_struct *	bd_part;         //如果该结构表示一个分区，则指向该分区的信息
 	/* number of times partitions within this device have been opened. */
-	unsigned		bd_part_count; //记录该分区被打开了多少次
+	unsigned		bd_part_count;       //记录该分区被打开了多少次
 	int			bd_invalidated;
-	struct gendisk *	bd_disk;   //描述整个设备的gendisk
-	struct request_queue *  bd_queue;
+	struct gendisk *	bd_disk;         //描述整个设备的gendisk
+	struct request_queue *  bd_queue; 
 	struct list_head	bd_list;
 	/*
 	 * Private data.  You must have bd_claim'ed the block_device
