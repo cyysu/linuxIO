@@ -131,3 +131,10 @@ samples/
 scripts/
 
 drivers/
+Kbuild
+Kconfig
+MAINTAINERS
+Makefile
+README
+REPORTING-BUGS
+pax_global_header
