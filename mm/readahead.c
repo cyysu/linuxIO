@@ -118,7 +118,7 @@ static int read_pages(struct address_space *mapping, struct file *filp,
 	blk_start_plug(&plug);
 
 	if (mapping->a_ops->readpages) {
-		ret = mapping->a_ops->readpages(filp, mapping, pages, nr_pages);
+		ret = mapping->a_ops->readpages(filp, mapping, pages, nr_pages); //def_blk_aops block_dev.c
 		/* Clean up the remaining pages */
 		put_pages_list(pages);
 		goto out;
@@ -150,9 +150,9 @@ out:
  * Returns the number of pages requested, or the maximum amount of I/O allowed.
  */
 int __do_page_cache_readahead(struct address_space *mapping, struct file *filp,
-			pgoff_t offset, unsigned long nr_to_read,
-			unsigned long lookahead_size)
-{
+			pgoff_t offset, unsigned long nr_to_read,                       //offset 起始
+			unsigned long lookahead_size)                                   //nr_to_read要读的总大小
+{                                                                           //lookahead_size 预读的大小
 	struct inode *inode = mapping->host;
 	struct page *page;
 	unsigned long end_index;	/* The last page we want to read */
@@ -169,7 +169,7 @@ int __do_page_cache_readahead(struct address_space *mapping, struct file *filp,
 	/*
 	 * Preallocate as many pages as we will need.
 	 */
-	for (page_idx = 0; page_idx < nr_to_read; page_idx++) {
+	for (page_idx = 0; page_idx < nr_to_read; page_idx++) { //为内存中不存在的页分配一个page struct
 		pgoff_t page_offset = offset + page_idx;
 
 		if (page_offset > end_index)
@@ -185,8 +185,8 @@ int __do_page_cache_readahead(struct address_space *mapping, struct file *filp,
 		if (!page)
 			break;
 		page->index = page_offset;
-		list_add(&page->lru, &page_pool);
-		if (page_idx == nr_to_read - lookahead_size) //对预读的页标记为PG_readahead
+		list_add(&page->lru, &page_pool);  //head->next = new page
+		if (page_idx == nr_to_read - lookahead_size) //对预读的临界页标记为PG_readahead
 			SetPageReadahead(page);
 		ret++;
 	}
@@ -197,7 +197,7 @@ int __do_page_cache_readahead(struct address_space *mapping, struct file *filp,
 	 * will then handle the error.
 	 */
 	if (ret)
-		read_pages(mapping, filp, &page_pool, ret);
+		read_pages(mapping, filp, &page_pool, ret); //page_pool 中index大的靠近头，ret为需要请求的页
 	BUG_ON(!list_empty(&page_pool));
 out:
 	return ret;
