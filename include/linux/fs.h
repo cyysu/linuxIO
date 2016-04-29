@@ -320,8 +320,8 @@ struct writeback_control;
 #define IOCB_APPEND		(1 << 1)
 #define IOCB_DIRECT		(1 << 2)
 
-struct kiocb {
-	struct file		*ki_filp;
+struct kiocb {  //每个IO都对应一个kiocb
+	struct file		*ki_filp;  //指向对应的file指针
 	loff_t			ki_pos;
 	void (*ki_complete)(struct kiocb *iocb, long ret, long ret2);
 	void			*private;
@@ -614,14 +614,14 @@ struct inode {
 		const unsigned int i_nlink;
 		unsigned int __i_nlink;
 	};
-	dev_t			i_rdev;
-	loff_t			i_size;
-	struct timespec		i_atime;
-	struct timespec		i_mtime;
-	struct timespec		i_ctime;
+	dev_t			i_rdev;   //设备标志符
+	loff_t			i_size;  //以字节为单位的文件大小
+	struct timespec		i_atime; /* 最后访问时间 */
+	struct timespec		i_mtime; /* 最后修改(modify)时间 */
+	struct timespec		i_ctime; /* 最后改变(change)时间 */
 	spinlock_t		i_lock;	/* i_blocks, i_bytes, maybe i_size */
 	unsigned short          i_bytes;
-	unsigned int		i_blkbits;
+	unsigned int		i_blkbits;  /* 以位为单位的块大小 */
 	blkcnt_t		i_blocks;
 
 #ifdef __NEED_I_SIZE_ORDERED

@@ -1609,7 +1609,7 @@ void init_request_from_bio(struct request *req, struct bio *bio)
 }
 
 static void blk_queue_bio(struct request_queue *q, struct bio *bio)
-{
+{//实现bio的调度合并
 	const bool sync = !!(bio->bi_rw & REQ_SYNC);
 	struct blk_plug *plug;
 	int el_ret, rw_flags, where = ELEVATOR_INSERT_SORT;
@@ -1642,20 +1642,20 @@ static void blk_queue_bio(struct request_queue *q, struct bio *bio)
 	 * any locks.
 	 */
 	if (!blk_queue_nomerges(q) &&
-	    blk_attempt_plug_merge(q, bio, &request_count, NULL))
+	    blk_attempt_plug_merge(q, bio, &request_count, NULL)) //尝试将bio合并到当前的plugged list
 		return;
 
 	spin_lock_irq(q->queue_lock);
 
-	el_ret = elv_merge(q, &req, bio);
-	if (el_ret == ELEVATOR_BACK_MERGE) {
+	el_ret = elv_merge(q, &req, bio);   /* elv_merge是核心函数，找到bio前向或者后向合并的请求 */
+	if (el_ret == ELEVATOR_BACK_MERGE) {              //向后进行合并
 		if (bio_attempt_back_merge(q, req, bio)) {
 			elv_bio_merged(q, req, bio);
 			if (!attempt_back_merge(q, req))
 				elv_merged_request(q, req, el_ret);
 			goto out_unlock;
 		}
-	} else if (el_ret == ELEVATOR_FRONT_MERGE) {
+	} else if (el_ret == ELEVATOR_FRONT_MERGE) {     //向前进行合并
 		if (bio_attempt_front_merge(q, req, bio)) {
 			elv_bio_merged(q, req, bio);
 			if (!attempt_front_merge(q, req))
@@ -1664,7 +1664,7 @@ static void blk_queue_bio(struct request_queue *q, struct bio *bio)
 		}
 	}
 
-get_rq:
+get_rq:                                             //无法找到对应的请求合并
 	/*
 	 * This sync check and mask will be re-done in init_request_from_bio(),
 	 * but we need to set it earlier to expose the sync flag to the
@@ -1678,7 +1678,7 @@ get_rq:
 	 * Grab a free request. This is might sleep but can not fail.
 	 * Returns with the queue unlocked.
 	 */
-	req = get_request(q, rw_flags, bio, GFP_NOIO);
+	req = get_request(q, rw_flags, bio, GFP_NOIO);   //获取一个空的请求
 	if (IS_ERR(req)) {
 		bio->bi_error = PTR_ERR(req);
 		bio_endio(bio);
@@ -1691,7 +1691,7 @@ get_rq:
 	 * We don't worry about that case for efficiency. It won't happen
 	 * often, and the elevators are able to handle it.
 	 */
-	init_request_from_bio(req, bio);
+	init_request_from_bio(req, bio);                 //利用bio初始化request
 
 	if (test_bit(QUEUE_FLAG_SAME_COMP, &q->queue_flags))
 		req->cpu = raw_smp_processor_id();
@@ -1705,17 +1705,17 @@ get_rq:
 		if (!request_count)
 			trace_block_plug(q);
 		else {
-			if (request_count >= BLK_MAX_REQUEST_COUNT) {
+			if (request_count >= BLK_MAX_REQUEST_COUNT) { //如果请求数已经达到上限制
 				blk_flush_plug_list(plug, false);
 				trace_block_plug(q);
 			}
 		}
-		list_add_tail(&req->queuelist, &plug->list);
+		list_add_tail(&req->queuelist, &plug->list); //将请求加入到队列尾
 		blk_account_io_start(req, true);
 	} else {
 		spin_lock_irq(q->queue_lock);
-		add_acct_request(q, req, where);
-		__blk_run_queue(q);
+		add_acct_request(q, req, where); /* 将request加入到调度器中 */
+		__blk_run_queue(q);              /* 调用底层函数执行unplug操作 */
 out_unlock:
 		spin_unlock_irq(q->queue_lock);
 	}
@@ -1850,9 +1850,9 @@ generic_make_request_checks(struct bio *bio)
 	 * If this device has partitions, remap block n
 	 * of partition p to block n+start(p) of the disk.
 	 */
-	blk_partition_remap(bio);
+	blk_partition_remap(bio); //如果当前设备存在分区，通过bdev->bd_part->start_sect + bio->bi_inter.bi_sectiro 重新映射
 
-	if (bio_check_eod(bio, nr_sectors))
+	if (bio_check_eod(bio, nr_sectors)) //检查有没有超出主分区
 		goto end_io;
 
 	/*
@@ -1941,21 +1941,21 @@ void generic_make_request(struct bio *bio)
 	 * it is non-NULL, then a make_request is active, and new requests
 	 * should be added at the tail
 	 */
-	if (current->bio_list) {
-		bio_list_add(current->bio_list, bio);
-		return;
+	if (current->bio_list) { //只希望make_request_fn使用一次，否则基于栈的设备会碰到问题，使用current->bio_list维护由make_request_fn提交的请求队列
+		bio_list_add(current->bio_list, bio);  //bio_list同样用于标志当前generic_make_request是否在当前任务中已经被激活
+		return;                                //如果该值非null，代表已经进行过make_request，只需要将新的requests添加到尾部
 	}
 
 	/* following loop may be a bit non-obvious, and so deserves some
 	 * explanation.
-	 * Before entering the loop, bio->bi_next is NULL (as all callers
-	 * ensure that) so we have a list with a single bio.
-	 * We pretend that we have just taken it off a longer list, so
-	 * we assign bio_list to a pointer to the bio_list_on_stack,
-	 * thus initialising the bio_list of new bios to be
-	 * added.  ->make_request() may indeed add some more bios
+	 * Before entering the loop, bio->bi_next is NULL (as all callers 在进入到循环前，bio->bi_next为null
+	 * ensure that) so we have a list with a single bio.              因此该list只有一个bio
+	 * We pretend that we have just taken it off a longer list, so    我们假设是从一个很长的链取下的，因此
+	 * we assign bio_list to a pointer to the bio_list_on_stack,      我们将bio_list指向bio_list_on_stack,这样初始化新的
+	 * thus initialising the bio_list of new bios to be               bios的bio_list. ->make_request能通过递归调用generic_make_request
+	 * added.  ->make_request() may indeed add some more bios         添加更多的bios，如果真的这么做了，会发现一个非空的bio_list，添加到尾部
 	 * through a recursive call to generic_make_request.  If it
-	 * did, we find a non-NULL value in bio_list and re-enter the loop
+	 * did, we find a non-NULL value in bio_list and re-enter the loop 
 	 * from the top.  In this case we really did just take the bio
 	 * of the top of the list (no pretending) and so remove it from
 	 * bio_list, and call into ->make_request() again.
@@ -1964,11 +1964,11 @@ void generic_make_request(struct bio *bio)
 	bio_list_init(&bio_list_on_stack);
 	current->bio_list = &bio_list_on_stack;
 	do {
-		struct request_queue *q = bdev_get_queue(bio->bi_bdev);
+		struct request_queue *q = bdev_get_queue(bio->bi_bdev); //bio所在的gendisk的request_queue的请求队列
 
-		q->make_request_fn(q, bio);
+		q->make_request_fn(q, bio);  //bkl_queue_bio:1611
 
-		bio = bio_list_pop(current->bio_list);
+		bio = bio_list_pop(current->bio_list); //从当前进程的bio_list取出head，添加进队列中
 	} while (bio);
 	current->bio_list = NULL; /* deactivate */
 }

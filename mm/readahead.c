@@ -110,7 +110,7 @@ EXPORT_SYMBOL(read_cache_pages);
 
 static int read_pages(struct address_space *mapping, struct file *filp,
 		struct list_head *pages, unsigned nr_pages)
-{
+{//先申请一个blk_plug  pages= page_pool 是要进行IO操作的页的list
 	struct blk_plug plug;
 	unsigned page_idx;
 	int ret;
@@ -186,7 +186,7 @@ int __do_page_cache_readahead(struct address_space *mapping, struct file *filp,
 			break;
 		page->index = page_offset;
 		list_add(&page->lru, &page_pool);
-		if (page_idx == nr_to_read - lookahead_size)
+		if (page_idx == nr_to_read - lookahead_size) //对预读的页标记为PG_readahead
 			SetPageReadahead(page);
 		ret++;
 	}
@@ -213,11 +213,11 @@ int force_page_cache_readahead(struct address_space *mapping, struct file *filp,
 	if (unlikely(!mapping->a_ops->readpage && !mapping->a_ops->readpages))
 		return -EINVAL;
 
-	nr_to_read = max_sane_readahead(nr_to_read);
+	nr_to_read = max_sane_readahead(nr_to_read); //512 和 nr_to_read中较小的
 	while (nr_to_read) {
 		int err;
 
-		unsigned long this_chunk = (2 * 1024 * 1024) / PAGE_CACHE_SIZE;
+		unsigned long this_chunk = (2 * 1024 * 1024) / PAGE_CACHE_SIZE; // ==512
 
 		if (this_chunk > nr_to_read)
 			this_chunk = nr_to_read;
@@ -495,7 +495,7 @@ void page_cache_sync_readahead(struct address_space *mapping,
 		return;
 
 	/* be dumb */
-	if (filp && (filp->f_mode & FMODE_RANDOM)) {
+	if (filp && (filp->f_mode & FMODE_RANDOM)) { //如果为随机访问,根据请求的大小进行读
 		force_page_cache_readahead(mapping, filp, offset, req_size);
 		return;
 	}
@@ -525,7 +525,7 @@ page_cache_async_readahead(struct address_space *mapping,
 			   struct file_ra_state *ra, struct file *filp,
 			   struct page *page, pgoff_t offset,
 			   unsigned long req_size)
-{
+{//异步预读，
 	/* no read-ahead */
 	if (!ra->ra_pages)
 		return;

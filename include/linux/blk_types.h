@@ -29,11 +29,11 @@ struct bio_vec {
 #ifdef CONFIG_BLOCK
 
 struct bvec_iter {
-	sector_t		bi_sector;	/* device address in 512 byte
+	sector_t		bi_sector;	/* device address in 512 byte 该IO操作在分区的起始扇区
 						   sectors */
-	unsigned int		bi_size;	/* residual I/O count */
+	unsigned int		bi_size;	/* residual I/O count 要读的大小*/
 
-	unsigned int		bi_idx;		/* current index into bvl_vec */
+	unsigned int		bi_idx;		/* current index into bvl_vec bvl_vec当前的index*/
 
 	unsigned int            bi_bvec_done;	/* number of bytes completed in
 						   current bvec */
@@ -43,16 +43,16 @@ struct bvec_iter {
  * main unit of I/O for the block layer and lower layers (ie drivers and
  * stacking drivers)
  */
-struct bio {
+struct bio { //用于描述单一的io请求，记录一次io所需要的信息，包括数据缓存位置，操作的起始地址，是读还是写
 	struct bio		*bi_next;	/* request queue link */
-	struct block_device	*bi_bdev;
+	struct block_device	*bi_bdev;    //io的设备
 	unsigned int		bi_flags;	/* status, command, etc */
 	int			bi_error;
-	unsigned long		bi_rw;		/* bottom bits READ/WRITE,
+	unsigned long		bi_rw;		/* bottom bits READ/WRITE, io的方向
 						 * top bits priority
 						 */
 
-	struct bvec_iter	bi_iter;
+	struct bvec_iter	bi_iter; //描述请求在设备中的地址
 
 	/* Number of segments in this BIO after
 	 * physical address coalescing is performed.
@@ -68,7 +68,7 @@ struct bio {
 
 	atomic_t		__bi_remaining;
 
-	bio_end_io_t		*bi_end_io;
+	bio_end_io_t		*bi_end_io; //io的结果
 
 	void			*bi_private;
 #ifdef CONFIG_BLK_CGROUP
@@ -85,7 +85,7 @@ struct bio {
 #endif
 	};
 
-	unsigned short		bi_vcnt;	/* how many bio_vec's */
+	unsigned short		bi_vcnt;	/* how many bio_vec's 缓存向量组的数*/
 
 	/*
 	 * Everything starting with bi_max_vecs will be preserved by bio_reset()
@@ -95,7 +95,7 @@ struct bio {
 
 	atomic_t		__bi_cnt;	/* pin count */
 
-	struct bio_vec		*bi_io_vec;	/* the actual vec list */
+	struct bio_vec		*bi_io_vec;	/* the actual vec list 缓存向量数组，每个向量由[page，offset，len]组成*/
 
 	struct bio_set		*bi_pool;
 

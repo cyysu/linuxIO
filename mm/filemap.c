@@ -1486,22 +1486,22 @@ static void shrink_readahead_size_eio(struct file *filp,
  */
 static ssize_t do_generic_file_read(struct file *filp, loff_t *ppos,
 		struct iov_iter *iter, ssize_t written)
-{
+{   //读文件，当前文件地址，数据存放的地址，已经读的数量 (ppos=&iocb->ki_pos)
 	struct address_space *mapping = filp->f_mapping;
 	struct inode *inode = mapping->host;
 	struct file_ra_state *ra = &filp->f_ra;
-	pgoff_t index;
-	pgoff_t last_index;
-	pgoff_t prev_index;
+	pgoff_t index;                                    //初始存放当前文件所在的的帧号
+	pgoff_t last_index;                               //初始存放文件所要读的最后一页的帧号
+	pgoff_t prev_index;                               //初始存放前一次次预读所在的帧号
 	unsigned long offset;      /* offset into pagecache page */
-	unsigned int prev_offset;
+	unsigned int prev_offset;                         //初始存放前一次次预读页内偏移
 	int error = 0;
 
-	index = *ppos >> PAGE_CACHE_SHIFT;
-	prev_index = ra->prev_pos >> PAGE_CACHE_SHIFT;
+	index = *ppos >> PAGE_CACHE_SHIFT;                 
+	prev_index = ra->prev_pos >> PAGE_CACHE_SHIFT;    
 	prev_offset = ra->prev_pos & (PAGE_CACHE_SIZE-1);
 	last_index = (*ppos + iter->count + PAGE_CACHE_SIZE-1) >> PAGE_CACHE_SHIFT;
-	offset = *ppos & ~PAGE_CACHE_MASK;
+	offset = *ppos & ~PAGE_CACHE_MASK;                //当前要读的文件地址页内偏移
 
 	for (;;) {
 		struct page *page;
@@ -1511,11 +1511,11 @@ static ssize_t do_generic_file_read(struct file *filp, loff_t *ppos,
 
 		cond_resched();
 find_page:
-		page = find_get_page(mapping, index);
-		if (!page) {
+		page = find_get_page(mapping, index); //通过index找到address_space中的
+		if (!page) { //如果页不存在
 			page_cache_sync_readahead(mapping,
 					ra, filp,
-					index, last_index - index);
+					index, last_index - index); //先从进行readahead，从index开始，读last_index-index个
 			page = find_get_page(mapping, index);
 			if (unlikely(page == NULL))
 				goto no_cached_page;
@@ -1559,7 +1559,7 @@ page_ok:
 		/* nr is the maximum number of bytes to copy from this page */
 		nr = PAGE_CACHE_SIZE;
 		if (index == end_index) {
-			nr = ((isize - 1) & ~PAGE_CACHE_MASK) + 1;
+			nr = ((isize - 1) & ~PAGE_CACHE_MASK) + 1; //页内偏移
 			if (nr <= offset) {
 				page_cache_release(page);
 				goto out;
@@ -1719,7 +1719,7 @@ generic_file_read_iter(struct kiocb *iocb, struct iov_iter *iter)
 	loff_t *ppos = &iocb->ki_pos;
 	loff_t pos = *ppos;
 
-	if (iocb->ki_flags & IOCB_DIRECT) {
+	if (iocb->ki_flags & IOCB_DIRECT) { //IO为直接读
 		struct address_space *mapping = file->f_mapping;
 		struct inode *inode = mapping->host;
 		size_t count = iov_iter_count(iter);

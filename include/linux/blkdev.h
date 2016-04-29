@@ -84,14 +84,14 @@ enum rq_cmd_type_bits {
  * If you modify this structure, make sure to update blk_rq_init() and
  * especially blk_mq_rq_ctx_init() to take care of the added fields.
  */
-struct request {
+struct request { //用于描述提交给块设备的I/O请求，bio会被动态的添加进去，因此一个request可能存在多个相邻的bio
 	struct list_head queuelist;
 	union {
 		struct call_single_data csd;
 		unsigned long fifo_time;
 	};
 
-	struct request_queue *q;
+	struct request_queue *q; //指向所属的请求队列
 	struct blk_mq_ctx *mq_ctx;
 
 	u64 cmd_flags;
@@ -102,9 +102,9 @@ struct request {
 
 	/* the following two fields are internal, NEVER access directly */
 	unsigned int __data_len;	/* total data len */
-	sector_t __sector;		/* sector cursor */
+	sector_t __sector;		/* sector cursor 下一个要传输的bio的起始扇区号*/
 
-	struct bio *bio;
+	struct bio *bio;      //用于维护request中的bio链表
 	struct bio *biotail;
 
 	/*
@@ -1038,7 +1038,7 @@ static inline void blk_post_runtime_resume(struct request_queue *q, int err) {}
  * the plug list when the task sleeps by itself. For details, please see
  * schedule() where blk_schedule_flush_plug() is called.
  */
-struct blk_plug {
+struct blk_plug { //允许构建一个相关请求的队列，将会暂时保存这些I/O片段
 	struct list_head list; /* requests */
 	struct list_head mq_list; /* blk-mq requests */
 	struct list_head cb_list; /* md requires an unplug callback */
