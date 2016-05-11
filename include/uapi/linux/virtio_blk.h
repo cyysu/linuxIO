@@ -55,30 +55,30 @@
 
 struct virtio_blk_config {
 	/* The capacity (in 512-byte sectors). */
-	__u64 capacity;
+	__u64 capacity;        //块设备的容量
 	/* The maximum segment size (if VIRTIO_BLK_F_SIZE_MAX) */
-	__u32 size_max;
+	__u32 size_max;        //段最大大小
 	/* The maximum number of segments (if VIRTIO_BLK_F_SEG_MAX) */
-	__u32 seg_max;
+	__u32 seg_max;         //段数量
 	/* geometry of the device (if VIRTIO_BLK_F_GEOMETRY) */
-	struct virtio_blk_geometry {
-		__u16 cylinders;
-		__u8 heads;
-		__u8 sectors;
+	struct virtio_blk_geometry { //块设备的几何
+		__u16 cylinders;          //柱状
+		__u8 heads;               //头
+		__u8 sectors;             //扇区
 	} geometry;
 
 	/* block size of device (if VIRTIO_BLK_F_BLK_SIZE) */
-	__u32 blk_size;
+	__u32 blk_size;              //设备的块大小
 
 	/* the next 4 entries are guarded by VIRTIO_BLK_F_TOPOLOGY  */
 	/* exponent for physical block per logical block. */
-	__u8 physical_block_exp;
+	__u8 physical_block_exp;        //每个逻辑块所包含的物理block的2的指数
 	/* alignment offset in logical blocks. */
-	__u8 alignment_offset;
+	__u8 alignment_offset;          //逻辑块对齐
 	/* minimum I/O size without performance penalty in logical blocks. */
-	__u16 min_io_size;
+	__u16 min_io_size;              //逻辑块内最小的I/o size
 	/* optimal sustained I/O size in logical blocks. */
-	__u32 opt_io_size;
+	__u32 opt_io_size;              //最优I/O size
 
 	/* writeback mode (if VIRTIO_BLK_F_CONFIG_WCE) */
 	__u8 wce;
@@ -126,11 +126,11 @@ struct virtio_blk_config {
  */
 struct virtio_blk_outhdr {
 	/* VIRTIO_BLK_T* */
-	__virtio32 type;
+	__virtio32 type;       //whether it is a read, write or generic SCSI command and whether a write barrier should precede this command
 	/* io priority. */
-	__virtio32 ioprio;
+	__virtio32 ioprio;     //allow the guest to hint about relative priorities of requests, which are duly ignored by all current implementations 
 	/* Sector (ie. 512 byte offset) */
-	__virtio64 sector;
+	__virtio64 sector;     //512=byte offset of the read or write0.
 };
 
 #ifndef VIRTIO_BLK_NO_LEGACY

@@ -47,11 +47,11 @@
 /* The Host uses this in used->flags to advise the Guest: don't kick me when
  * you add a buffer.  It's unreliable, so it's simply an optimization.  Guest
  * will still kick if it's out of buffers. */
-#define VRING_USED_F_NO_NOTIFY	1
+#define VRING_USED_F_NO_NOTIFY	1 //host告诉guest，在添加一个buffer时，不需要kick him
 /* The Guest uses this in avail->flags to advise the Host: don't interrupt me
  * when you consume a buffer.  It's unreliable, so it's simply an
  * optimization.  */
-#define VRING_AVAIL_F_NO_INTERRUPT	1
+#define VRING_AVAIL_F_NO_INTERRUPT	1 //guest用这个flag标示host，当其consume一个buffer时，不要通知他
 
 /* We support indirect buffer descriptors */
 #define VIRTIO_RING_F_INDIRECT_DESC	28
@@ -63,33 +63,33 @@
 #define VIRTIO_RING_F_EVENT_IDX		29
 
 /* Virtio ring descriptors: 16 bytes.  These can chain together via "next". */
-struct vring_desc {
+struct vring_desc { //描述guest使用的buffer
 	/* Address (guest-physical). */
-	__virtio64 addr;
+	__virtio64 addr;   //guest 物理地址
 	/* Length. */
-	__virtio32 len;
+	__virtio32 len;    //buffer的长度
 	/* The flags as indicated above. */
-	__virtio16 flags;
+	__virtio16 flags;  //VRING_DESC_F_NEXT 表示当前buffer下一个域是否有效，*当前buffer的读写权，INDIRECT,表示buffer包含一个buffer描述符的list
 	/* We chain unused descriptors via this, too */
-	__virtio16 next;
+	__virtio16 next;   //指向下一个buffer，通过将这些串联起来，形成descriptor table，由descriptor table指向这些list
 };
 
 struct vring_avail {
-	__virtio16 flags;
-	__virtio16 idx;
+	__virtio16 flags; //值为0或者1,1表示Guest不需要device使用完这些descriptor时上报中断
+	__virtio16 idx;   //指向下一个descriptor的入口处
 	__virtio16 ring[];
 };
 
 /* u32 is used here for ids for padding reasons. */
 struct vring_used_elem {
 	/* Index of start of used descriptor chain. */
-	__virtio32 id;
+	__virtio32 id; //指向descriptor的入口
 	/* Total length of the descriptor chain which was used (written to) */
-	__virtio32 len;
+	__virtio32 len; //写入到buffer中的字节
 };
 
-struct vring_used {
-	__virtio16 flags;
+struct vring_used {//指向host使用过的buffers
+	__virtio16 flags;  //通知guest再次添加buffer到available ring时不再提醒
 	__virtio16 idx;
 	struct vring_used_elem ring[];
 };
@@ -97,11 +97,11 @@ struct vring_used {
 struct vring {
 	unsigned int num;
 
-	struct vring_desc *desc;
+	struct vring_desc *desc; //存储一些关联的描述符，每个描述符都是对一个buffer的描述，包含一个address/length的配对
 
-	struct vring_avail *avail;
+	struct vring_avail *avail; //告诉guest端表示哪些描述符链式当前可用的
 
-	struct vring_used *used;
+	struct vring_used *used;  //表示Host端哪些used
 };
 
 /* Alignment requirements for vring elements.

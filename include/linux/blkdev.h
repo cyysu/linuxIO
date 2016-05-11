@@ -1620,7 +1620,7 @@ struct block_device_operations {
 	void (*release) (struct gendisk *, fmode_t);
 	int (*rw_page)(struct block_device *, sector_t, struct page *, int rw);
 	int (*ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
-	int (*compat_ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
+	int (*compat_ioctl) (struct block_device *, fmode_t, unsigned, unsigned long); //发出ioctl系统调用，不使用大内核锁
 	long (*direct_access)(struct block_device *, sector_t, void __pmem **,
 			unsigned long *pfn);
 	unsigned int (*check_events) (struct gendisk *disk,

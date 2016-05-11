@@ -8,32 +8,32 @@
 #include <uapi/linux/virtio_config.h>
 
 /**
- * virtio_config_ops - operations for configuring a virtio device
- * @get: read the value of a configuration field
+ * virtio_config_ops - operations for configuring a virtio device //用于配置virtio device的操作
+ * @get: read the value of a configuration field    //从配置域的offset起读len长度的数据到buf中
  *	vdev: the virtio_device
  *	offset: the offset of the configuration field
  *	buf: the buffer to write the field value into.
  *	len: the length of the buffer
- * @set: write the value of a configuration field
+ * @set: write the value of a configuration field  //将buf len长的数据写到配置域offset起的地址中
  *	vdev: the virtio_device
  *	offset: the offset of the configuration field
  *	buf: the buffer to read the field value from.
  *	len: the length of the buffer
- * @generation: config generation counter
+ * @generation: config generation counter          //
  *	vdev: the virtio_device
  *	Returns the config generation counter
- * @get_status: read the status byte
+ * @get_status: read the status byte               //读状态位
  *	vdev: the virtio_device
  *	Returns the status byte
- * @set_status: write the status byte
+ * @set_status: write the status byte              //写状态位
  *	vdev: the virtio_device
  *	status: the new status byte
- * @reset: reset the device
+ * @reset: reset the device                        //重置设备
  *	vdev: the virtio device
  *	After this, status and feature negotiation must be done again
  *	Device must not be reset from its vq/config callbacks, or in
  *	parallel with being added/removed.
- * @find_vqs: find virtqueues and instantiate them.
+ * @find_vqs: find virtqueues and instantiate them.   //发现virtqueues 
  *	vdev: the virtio_device
  *	nvqs: the number of virtqueues to find
  *	vqs: on success, includes new virtqueues
@@ -43,22 +43,20 @@
  *		include a NULL entry for vqs unused by driver
  *	Returns 0 on success or error status
  * @del_vqs: free virtqueues found by find_vqs().
- * @get_features: get the array of feature bits for this device.
+ * @get_features: get the array of feature bits for this device. //返回第一个32位的feature bits
  *	vdev: the virtio_device
  *	Returns the first 32 feature bits (all we currently need).
- * @finalize_features: confirm what device features we'll be using.
- *	vdev: the virtio_device
- *	This gives the final feature bits for the device: it can change
+ * @finalize_features: confirm what device features we'll be using.  //确认能够使用的设备特性
  *	the dev->feature bits if it wants.
  *	Returns 0 on success or error status
- * @bus_name: return the bus name associated with the device
+ * @bus_name: return the bus name associated with the device          //返回和设备相连的bus的名称
  *	vdev: the virtio_device
  *      This returns a pointer to the bus name a la pci_name from which
  *      the caller can then copy.
  * @set_vq_affinity: set the affinity for a virtqueue.
  */
 typedef void vq_callback_t(struct virtqueue *);
-struct virtio_config_ops {
+struct virtio_config_ops {    //用于配置virtio device的操作
 	void (*get)(struct virtio_device *vdev, unsigned offset,
 		    void *buf, unsigned len);
 	void (*set)(struct virtio_device *vdev, unsigned offset,
@@ -392,7 +390,7 @@ static inline void virtio_cwrite64(struct virtio_device *vdev,
 
 /* Conditional config space accessors. */
 #define virtio_cread_feature(vdev, fbit, structname, member, ptr)	\
-	({								\
+	({								\              //如果vdev 中有fbit特性，则从structname->member中读值放入ptr中，并返回0
 		int _r = 0;						\
 		if (!virtio_has_feature(vdev, fbit))			\
 			_r = -ENOENT;					\

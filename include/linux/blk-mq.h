@@ -70,7 +70,7 @@ struct blk_mq_tag_set {
 	int			numa_node;
 	unsigned int		timeout;
 	unsigned int		flags;		/* BLK_MQ_F_* */
-	void			*driver_data;
+	void			*driver_data;   //Ö¸Ïòvblk
 
 	struct blk_mq_tags	**tags;
 

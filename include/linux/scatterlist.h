@@ -11,10 +11,10 @@ struct scatterlist {
 #ifdef CONFIG_DEBUG_SG
 	unsigned long	sg_magic;
 #endif
-	unsigned long	page_link;
-	unsigned int	offset;
-	unsigned int	length;
-	dma_addr_t	dma_address;
+	unsigned long	page_link; 	//pointer to a page, but the bit0 and bit1 have special info. 如果bit 0被设置了，page_link包含指向下一个sg table list，否则下一个为sg+1, bit 1被设置时，这个sg是最后一个
+	unsigned int	offset;      // Offset of data buffer in page referred by @page_link
+	unsigned int	length;     //Length of data
+	dma_addr_t	dma_address;    // this address can be used by device to do DMA 
 #ifdef CONFIG_NEED_SG_DMA_LENGTH
 	unsigned int	dma_length;
 #endif
@@ -129,7 +129,7 @@ static inline struct page *sg_page(struct scatterlist *sg)
 /**
  * sg_set_buf - Set sg entry to point at given data
  * @sg:		 SG entry
- * @buf:	 Data
+ * @buf:	 Data       虚拟地址
  * @buflen:	 Data length
  *
  **/
