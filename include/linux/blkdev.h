@@ -1616,8 +1616,8 @@ static inline bool integrity_req_gap_front_merge(struct request *req,
 #endif /* CONFIG_BLK_DEV_INTEGRITY */
 
 struct block_device_operations {
-	int (*open) (struct block_device *, fmode_t);
-	void (*release) (struct gendisk *, fmode_t);
+	int (*open) (struct block_device *, fmode_t); //在设备被打开和关闭时调用他们
+	void (*release) (struct gendisk *, fmode_t);  //
 	int (*rw_page)(struct block_device *, sector_t, struct page *, int rw);
 	int (*ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
 	int (*compat_ioctl) (struct block_device *, fmode_t, unsigned, unsigned long); //发出ioctl系统调用，不使用大内核锁
@@ -1626,9 +1626,9 @@ struct block_device_operations {
 	unsigned int (*check_events) (struct gendisk *disk,
 				      unsigned int clearing);
 	/* ->media_changed() is DEPRECATED, use ->check_events() instead */
-	int (*media_changed) (struct gendisk *);
+	int (*media_changed) (struct gendisk *);          //被内核调用来检查是否用户改变了驱动器中的介质，适用于支持可移除的介质的驱动器
 	void (*unlock_native_capacity) (struct gendisk *);
-	int (*revalidate_disk) (struct gendisk *);
+	int (*revalidate_disk) (struct gendisk *);        //响应一个介质的改变，给驱动一个机会来进行需要的准备工作
 	int (*getgeo)(struct block_device *, struct hd_geometry *);
 	/* this callback is with swap_lock and sometimes page table lock held */
 	void (*swap_slot_free_notify) (struct block_device *, unsigned long);

@@ -1940,7 +1940,7 @@ void generic_make_request(struct bio *bio)
 	 * task or not.  If it is NULL, then no make_request is active.  If
 	 * it is non-NULL, then a make_request is active, and new requests
 	 * should be added at the tail
-	 */
+	 */ //通过current->bio_list是否为NULL，如果不是则make_request为active状态，直接将该bio传入到等待处理的bio链的尾部
 	if (current->bio_list) { //只希望make_request_fn使用一次，否则基于栈的设备会碰到问题，使用current->bio_list维护由make_request_fn提交的请求队列
 		bio_list_add(current->bio_list, bio);  //bio_list同样用于标志当前generic_make_request是否在当前任务中已经被激活
 		return;                                //如果该值非null，代表已经进行过make_request，只需要将新的requests添加到尾部
@@ -1962,7 +1962,7 @@ void generic_make_request(struct bio *bio)
 	 */
 	BUG_ON(bio->bi_next);
 	bio_list_init(&bio_list_on_stack);
-	current->bio_list = &bio_list_on_stack;
+	current->bio_list = &bio_list_on_stack; //设置当前make_request为active状态，让后进来的bio进入到等待链表
 	do {
 		struct request_queue *q = bdev_get_queue(bio->bi_bdev); //bio所在的gendisk的request_queue的请求队列
 
@@ -1970,7 +1970,7 @@ void generic_make_request(struct bio *bio)
 
 		bio = bio_list_pop(current->bio_list); //从当前进程的bio_list取出head，添加进队列中
 	} while (bio);
-	current->bio_list = NULL; /* deactivate */
+	current->bio_list = NULL; /* deactivate */ //清除make_request为deactive
 }
 EXPORT_SYMBOL(generic_make_request);
 

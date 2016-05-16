@@ -188,7 +188,7 @@ struct gendisk {
 
 	const struct block_device_operations *fops; //特定的块设备的底层的操作
 	struct request_queue *queue;             //块设备的请求队列，所有的对该设备的请求都会放到该队列中，经过io scheduler处理后在提交
-	void *private_data;
+	void *private_data;                      //块驱动可以使用这个成员作为一个指向它们自己内部数据的指针
 
 	int flags;
 	struct device *driverfs_dev;  // FIXME: remove

@@ -16,10 +16,10 @@ typedef unsigned long kernel_ulong_t;
 #define PCI_ANY_ID (~0)
 
 struct pci_device_id {
-	__u32 vendor, device;		/* Vendor and device ID or PCI_ANY_ID*/
-	__u32 subvendor, subdevice;	/* Subsystem ID's or PCI_ANY_ID */
-	__u32 class, class_mask;	/* (class,subclass,prog-if) triplet */
-	kernel_ulong_t driver_data;	/* Data private to the driver */
+	__u32 vendor, device;		/* Vendor and device ID or PCI_ANY_ID*/ //设备商给的设备编号（身份证号）和该设备的名字（姓名）
+	__u32 subvendor, subdevice;	/* Subsystem ID's or PCI_ANY_ID */      //该设备是否有别名
+	__u32 class, class_mask;	/* (class,subclass,prog-if) triplet */  //该pci设备属于哪个设备：比如说，属于网络，块设备
+	kernel_ulong_t driver_data;	/* Data private to the driver */        //属于该设备的私有数据，每个设备都不一样。
 };
 
 
