@@ -65,6 +65,7 @@
 
 MODULE_AUTHOR("Qumranet");
 MODULE_LICENSE("GPL");
+//it's a test
 
 /* Architectures should define their poll value according to the halt latency */
 static unsigned int halt_poll_ns = KVM_HALT_POLL_NS_DEFAULT;
